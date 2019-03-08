@@ -1,0 +1,37 @@
+# create sandbox registry, notary server and trustsandbox services
+$docker-compose up -d
+
+# connect to trustsandbox container
+$docker container exec -it trustsandbox sh
+
+# pull a trusttest image from dockerhub
+$docker pull docker/trusttest
+
+# Re-tag trusttest image before pushing to sandbox registry 
+$docker tag docker/trusttest sandboxregistry:5000/test/trusttest:latest
+
+# Push the image to sandbox registry
+$docker push sandboxregistry:5000/test/trusttest:latest
+
+# Remove all the images from the trustsandbox
+$docker image prune -f -a
+
+# Test a pull command
+$docker pull sandboxregistry:5000/test/trusttest
+
+# Set content trust variables
+export DOCKER_CONTENT_TRUST=1
+export DOCKER_CONTENT_TRUST_SERVER=https://notaryserver:4443
+
+# Try to pull an image after content trust is enabled
+$docker pull sandboxregistry:5000/test/trusttest
+
+# Re-tag the image to trusted
+$docker tag sandboxregistry:5000/test/trusttest:latest sandboxregistry:5000/test/trusttest:trusted
+
+# Push the retagged image to sandbox registry to sign it
+$docker push sandboxregistry:5000/test/trusttest:trusted	 
+
+# Test the pull of signed image
+$docker pull sandboxregistry:5000/test/trusttest:trusted
+
