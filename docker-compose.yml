@@ -1,4 +1,5 @@
 version: "2"
+
 services:
    notaryserver:
      image: dockersecurity/notary_autobuilds:server-v0.5.1
